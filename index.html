@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Word Bank Quiz</title>
+		<style>
+			/* Add this in the <style> section */
+			@keyframes confettiBurst {
+			    0% {
+			        transform: scale(1) translate(0, 0);
+			        opacity: 1;
+			    }
+			    100% {
+			        transform: translate(var(--x), var(--y)) rotate(360deg);
+			        opacity: 0;
+			    }
+			}
+
+			       /* Overall body styling for a clean, exam-paper look */
+			       body {
+			           background: url('https://www.toptal.com/designers/subtlepatterns/patterns/old_mathematics.png');
+			           font-family: 'Arial', sans-serif;
+			           padding: 20px;
+			           max-width: 800px;
+			           margin: 0 auto;
+			           background-size: cover;
+			       }
+
+			       /* Styling for headers */
+			       h2 {
+			           text-align: center;
+			           color: #333;
+			       }
+
+			       /* Word bank container styling */
+			       .word-bank {
+			           display: flex;
+			           flex-wrap: wrap;
+			           gap: 10px;
+			           justify-content: center;
+			           margin-bottom: 20px;
+			       }
+
+			       /* Word bank items */
+			       .word-bank li {
+			           list-style: none;
+			           padding: 10px;
+			           border: 2px solid #333;
+			           border-radius: 5px;
+			           background-color: #f9f9f9;
+			           box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+			           font-weight: bold;
+			           cursor: pointer;
+			           transition: background-color 0.3s, text-decoration 0.3s;
+			       }
+
+			       /* Strike-through effect when word is clicked */
+			       .word-bank li.strike {
+			           text-decoration: line-through;
+			           background-color: #e0e0e0;
+			       }
+
+			       /* Questions styling */
+			       #questions {
+			           margin-bottom: 20px;
+			       }
+
+			       #questions p {
+			           margin: 10px 0;
+			       }
+
+			       /* Buttons styling */
+			       button {
+			           padding: 10px 20px;
+			           margin: 5px;
+			           border: none;
+			           border-radius: 5px;
+			           background-color: #4CAF50;
+			           color: white;
+			           font-size: 16px;
+			           cursor: pointer;
+			           transition: background-color 0.3s;
+			       }
+
+			       button:hover {
+			           background-color: #45a049;
+			       }
+
+			       /* Correct and incorrect input feedback */
+			       .correct { background-color: lightgreen; }
+			       .incorrect { background-color: lightcoral; }
+
+			       /* Result text */
+			       #result {
+			           text-align: center;
+			           font-size: 18px;
+			           color: #333;
+			           margin-top: 20px;
+			       }
+		</style>
+	</head>
+	<body>
+		<h2>Word Bank</h2>
+		<ul id="wordBank" class="word-bank"></ul>
+
+		<h2>Fill in the blanks:</h2>
+		<form id="quizForm">
+			<div id="questions"></div>
+			<div style="text-align: center;">
+				<button type="button" onclick="checkAnswers()">Check Answers</button>
+				<button type="button" onclick="showAnswers()">Show Answers</button>
+				<button type="button" onclick="startQuiz()">Restart</button>
+			</div>
+		</form>
+
+		<h2 id="result"></h2>
+
+		<script>
+			       class Word {
+			           constructor(word, examplesentence, answer) {
+			               this.word = word;
+			               this.examplesentence = examplesentence;
+			               this.answer = answer;
+			           }
+			       }
+
+			       // Words and their respective sentences and variations
+			       const words = [
+			           new Word("aboriginal", ['The land is owned by the ______ people that have lived there for centuries.', 'The ______ tribes of Australia have preserved their traditions for thousands of years.', 'Researchers are fascinated by the unique art forms developed by ______ communities in remote regions'], ['aboriginal', 'aboriginal', 'aboriginal']),
+			           new Word("adherent", ['The princes are working hard to prove themselves as loyal ______ of the empire.', 'He was a strong ______ of socialism'], ['adherents', 'adherent']),
+			           new Word("alliance", ['Maintaining a strong ______ with other countries is essential for national security.', 'A strategic ______ with global powers is key to securing peace and stability.', 'Without a reliable ______, it would be difficult to navigate complex international challenges.'], ['alliance', 'alliance', 'alliance']),
+			           new Word("autocracy", ['No one was brave enough to disagree with the leader of the ______.', '______ concentrates power in the hands of a few, leaving little room for individual freedoms or diverse opinions.', 'Under ______, dissent is suppressed, and the ability of people to shape their own lives is significantly reduced.'], ['autocracy', 'autocracy', 'autocracy']),
+			           new Word("autonomy", ['______ allows individuals to make decisions based on their own values and beliefs.', 'The six fractious republics, driven by their desire for self-governance, are demanding ______ to preserve their distinct identities and control their own affairs.'], ['autonomy', 'autonomy']),
+			           new Word("bastion", ["The press, protecting the people's rights and holding power accountable, is the last ______ of democracy, ensuring freedom and fairness.", 'British public schools, long associated with exclusivity and tradition, are regarded as one of the last ______ of upper-class privilege, maintaining the social status and networks of the elite.', 'Our ______ , both in its physical fortifications and the values it stands for, is strong enough to protect our citizens.'], ['bastion', 'bastions', 'bastion']),
+			           new Word("cede", ['Russia ______ Alaska to the U.S. in 1867.', 'The Qing dynasty ______ Hong Kong to the British Empire in 1842 through the treaty of Nanjing.'], ['ceded', 'ceded']),
+			           new Word("compatible", ['This software may not be ______ with older operating systems.', "These two technologies are not ______, so you'll need an adapter to make them work together.", 'His lifestyle choices are not ______ with the demands of his current job, leading to conflicts.'], ['compatible', 'compatible', 'compatible']),
+			           new Word("coveted", ['Champions of victory eagerly took every decoration, each one being highly ______.', 'They are this year’s winners of the ______ trophy.'], ['coveted', 'coveted']),
+			           new Word("decaying", ['The once vibrant neighborhood is now filled with ______ buildings and neglected streets.', 'Without proper maintenance, the infrastructure is slowly ______, posing risks to the community.', 'The ______ state of the economy has left many businesses struggling to survive.'], ['decaying', 'decaying', 'decaying']),
+			           new Word("depose", ['The president was ______ in a military coup.', 'As a result of a revolt, the king was ______.', 'The rebel forces sought to ______ the dictator, aiming to remove him from power and establish a new government.'], ['deposed', 'deposed', 'depose']),
+			           new Word("diplomatic", ['Maintaining ______ relations in the international community is crucial.', 'The two countries relied on ______ channels to resolve the conflict without resorting to military action.', 'The ambassador’s ______ efforts were crucial in maintaining peace between the neighboring nations.'], ['diplomatic', 'diplomatic', 'diplomatic']),
+			           new Word("expel", ['The priest kept on praying so he could ______ the malign spirits.', 'The school threatened to ______ any student caught cheating on the final exam.', 'The organization voted to ______ a member who violated its code of conduct.'], ['expel', 'expel', 'expel']),
+			           new Word("fragmented", ['The Democratic Party was ______.', 'The industry is highly ______ and needs consolidation.', 'The once unified organization became ______ after internal disputes and leadership changes.'], ['fragmented', 'fragmented', 'fragmented']),
+			           new Word("fraught", ['The new assessment system introduced by the university was a ______ endeavor, as students had to completely change their method of studying.', 'The conversation was ______ with problems and hard to solve.', 'The negotiations were ______ with tension, as both sides refused to compromise.'], ['fraught', 'fraught', 'fraught']),
+			           new Word("impose", ['The South Korean government ______ massive taxes on inherited property.', "It's unfair to ______ your personal beliefs on others without considering their perspectives.", 'The school administration plans to ______ a new dress code starting next semester.'], ['imposes', 'impose', 'impose']),
+			           new Word("prosperity", ['The Netherlands experienced long ______ before losing the war by the British Empire.', 'Our future ______ depends on economic growth.', 'Economic ______ came to South Korea with the hard workers in the construction industry.'], ['prosperity', 'prosperity', 'prosperity']),
+			           new Word("regime", ['The Hitler ______ is known for their crimes against humanity.'], ['regime']),
+			           new Word("swashbuckling", ['The story is about a ______ knight who travels across the land to rescue the princess.', 'The pirate captain was known for his ______ adventures, sailing the high seas with a sword in one hand and a treasure map in the other.', 'Tired of playing the ______ hero, he sought out more challenging roles.'], ['swashbuckling', 'swashbuckling', 'swashbuckling']),
+			           new Word("tacitly", ['By not speaking up, he ______ approved of the plan, even though he had some reservations.', "In the Katsura-Taft Agreement, Japan and the United States ______ agreed not to interfere in each other's interests in Korea and the Philippines.", 'He ______ admitted his mistake by quickly changing the subject when questioned.'], ['tacitly', 'tacitly', 'tacitly']),
+			           new Word("vague", ['He is being ______ about his motives for leaving the country, avoiding direct answers and leaving everyone unsure of his true intentions.', 'The details in the story were too ______ to be believed, lacking specific information and leaving too many unanswered questions.'], ['vague', 'vague']),
+			           new Word("wrest", ['After years of legal battles, she finally managed to ______ ownership of the family business.', 'Shareholders will try to ______ control of the company from the current management.'], ['wrest', 'wrest']),
+			           new Word("conspicuous", ['The error in the report was ______, standing out to everyone who read it.', "The absence of key players was ______ during the game, affecting the team's performance.", 'The changes in his behavior were ______, and everyone noticed something was wrong.'], ['conspicuous', 'conspicuous', 'conspicuous']),
+			           new Word("contest", ['She decided to ______ the results of the election, claiming irregularities in the voting process.', 'Several athletes will ______ for the gold medal in the upcoming race.', 'The team will ______ the referee’s decision, believing it was unfair.'], ['contest', 'contest', 'contest']),
+			           new Word("antagonistic", ['Their relationship has become increasingly ______, with constant arguments and misunderstandings.', 'Despite their ______ views, they managed to have a respectful debate.', 'His ______ attitude toward the proposal made it difficult to reach a consensus.'], ['antagonistic', 'antagonistic', 'antagonistic']),
+			           new Word("supremacy", ['The empire sought to establish ______ over its neighboring territories through military conquest.', 'The team has maintained its ______ in the league, winning the championship for three consecutive years.', 'Technological ______ in the industry has allowed the company to dominate the market for decades.'], ['supremacy', 'supremacy', 'supremacy']),
+			           new Word("precaution", ['Wearing a seatbelt is a simple but effective ______ to prevent injury in case of an accident.', 'As a ______, they stocked up on food and water before the storm hit.', 'The doctor recommended taking antibiotics as a ______ to avoid infection.'], ['precaution', 'precaution', 'precaution']),
+			           new Word("temporary", ['The pain from the injury was only ______, and he recovered quickly.', 'We had to find ______ housing while our home was being renovated.', 'The bridge is closed for ______ repairs but will reopen soon.'], ['temporary', 'temporary', 'temporary']),
+			           new Word("prominent", ['The building is located on a ______ corner in the city center, making it highly visible.', 'His most ______ feature is his deep voice, which everyone remembers.', 'The artist’s work gained ______ recognition after the recent exhibition.'], ['prominent', 'prominent', 'prominent']),
+			           new Word("exertion", ['After a day of intense ______ at the gym, he was too tired to go out.', "The president's ______ of authority was necessary to pass the new law despite opposition.", 'The successful ______ of diplomatic pressure led to the resolution of the conflict.'], ['exertion', 'exertion', 'exertion']),
+			           new Word("supersede", ['The new law will ______ the old regulations, making previous policies obsolete.', 'Her authority was ______ by a new manager, who took over all decision-making responsibilities.', "In some cases, the court's ruling can ______ local laws, setting a new legal precedent."], ['supersede', 'superseded', 'supersede']),
+			           new Word("emanate", ['A warm glow seemed to ______ from the fireplace, filling the room with light.', 'Confidence seemed to ______ from her as she delivered her speech.', 'A strange smell began to ______ from the kitchen, indicating something was burning.'], ['emanate', 'emanate', 'emanate']),
+			           new Word("dictate", ['The manager tried to ______ every detail of the project, leaving little room for creativity.', "The teacher's strict guidelines ______ how students must format their essays.", 'Market trends often ______ which products businesses should focus on.'], ['dictate', 'dictate', 'dictate']),
+			           new Word("axiomatic", ["In mathematics, certain principles are considered ______ and don't require proof.", 'The idea that hard work leads to success is often treated as ______ in many cultures.', "In science, it's not ______ that older theories will always be replaced by new ones; some remain relevant for centuries."], ['axiomatic', 'axiomatic', 'axiomatic']),
+			           new Word("disturb", ['The loud noise from the construction site ______ the peaceful afternoon.', 'The sudden changes in weather patterns have ______ the natural habitat of many animals.', 'The news of the accident deeply ______ everyone in the community.'], ['disturbed', 'disturbed', 'disturbed']),
+			           new Word("aberration", ['His outburst of anger was an ______ from his usual calm demeanor.', 'Her recent poor performance was an ______, as she usually excels in her work.', "The experiment's unexpected results were initially thought to be an ______, but later confirmed as accurate."], ['aberration', 'aberration', 'aberration']),
+			           new Word("usurp", ['The general attempted to ______ the throne by leading a coup against the king.', 'His ambition was to ______ power from the rightful leader and install himself as ruler.', 'The rebels sought to ______ control of the government through force.'], ['usurp', 'usurp', 'usurp']),
+			           new Word("permanent", ["The tattoo is ______, so be sure it's something you really want.", 'She finally found a ______ job after years of working short-term contracts.', 'The damage caused by the fire was ______, and the building had to be demolished.'], ['permanent', 'permanent', 'permanent']),
+			           new Word("convulsive", ['Her sobbing became ______, shaking her body uncontrollably.', 'The earthquake caused ______ tremors that rattled the buildings for several minutes.', 'The stock market went through ______ changes after the unexpected announcement.'], ['convulsive', 'convulsive', 'convulsive']),
+			           new Word("compose", ['The committee is ______ of members from different departments.', 'The novel is ______ of several interconnected stories.', 'Several different elements ______ the structure of this complex system.'], ['composed', 'composed', 'compose']),
+			           new Word("execute", ['The team worked hard to ______ the project plan on time.', 'The general was ordered to ______ the military strategy at dawn.', 'He was sentenced to death and would be ______ the following week.'], ['execute', 'execute', 'executed']),
+			           new Word("mandate", ["The court's ruling will ______ changes in the company’s hiring practices.", 'The new policy was ______ by the board of directors to improve workplace safety.', 'International organizations often ______ standards for environmental protection in global agreements.'], ['mandate', 'mandated', 'mandate']),
+			           new Word("issue", ['The government will ______ a statement later today regarding the new policy.', 'The school will ______ guidelines for the upcoming event to ensure safety.', 'The police ______ a warning to drivers about icy road conditions.'], ['issue', 'issue', 'issued']),
+			           new Word("penetrate", ['The company is trying to ______ new markets in Asia.', 'The bullet failed to ______ the armor of the vehicle.', 'Her words ______ his mind, making him reconsider his decision.'], ['penetrate', 'penetrate', 'penetrated']),
+			           new Word("prevailing", ['The ______ opinion among experts is that climate change needs immediate action.', 'The ______ winds in the region make it ideal for wind farms.', 'Given the ______ economic conditions, many businesses are hesitant to invest in new ventures due to uncertainty in the market.'], ['prevailing', 'prevailing', 'prevailing']),
+			           new Word("encroachment", ['The ______ of urban development into rural areas is threatening the natural habitat of many species.', 'The ______ of privacy by invasive technologies has become a major concern in the digital age.', 'The government’s new laws were seen as an ______ on individual freedoms and sparked widespread protests.'], ['encroachment', 'encroachment', 'encroachment']),
+			           new Word("indispensable", ['Her leadership skills have made her an ______ member of the team, especially during critical projects.', 'In today’s digital world, a stable internet connection is ______ for most businesses to operate efficiently.', 'Water is ______ for all living organisms; without it, life cannot exist.'], ['indispensable', 'indispensable', 'indispensable']),
+			           new Word("despotism", ['The country suffered under decades of ______, where a single ruler held absolute power and suppressed all forms of dissent.', 'The fall of the monarchy marked the end of ______ and the beginning of a more democratic era for the nation.', 'The citizens lived in fear under the ______ of the dictator, where any opposition was brutally crushed.'], ['despotism', 'despotism', 'despotism']),
+			           new Word("yoke", ['The country fought for decades to free itself from the ______ of colonial rule.', 'She felt like her demanding job was a ______ that             kept her from pursuing her true passions.', 'The revolution aimed to break the ______ of tyranny and restore power to the people.'], ['yoke', 'yoke', 'yoke']),
+			           new Word("subsist", ['Many refugees are ______ in temporary shelters, relying on aid to survive.', 'In the early days of human civilization, people were ______ through hunting and gathering.', "The company's policy on remote work is still ______, even after the pandemic restrictions were lifted."], ['subsisting', 'subsisting', 'subsisting']),
+			           new Word("salutary", ['The teacher’s strict discipline had a ______ effect on the students, improving both their behavior and academic performance.', 'Although the feedback was harsh, it was ______ and ultimately helped him improve his work.', 'The crisis, though difficult, had a ______ effect by forcing the company to innovate and become more efficient.'], ['salutary', 'salutary', 'salutary']),
+			           new Word("instigate", ['They were accused of trying to ______ a rebellion against the government.', 'Her persistent complaints eventually ______ a formal investigation into the matter.'], ['instigate', 'instigated']),
+			           new Word("undertake", ['The company decided to ______ a major project to revamp its entire product line.', 'She promised to ______ the task of training new employees, despite her busy schedule.', 'The government is set to ______ reforms aimed at improving the education system.'], ['undertake', 'undertake', 'undertake']),
+			           new Word("amenable", ['The manager was ______ to suggestions for improving the workflow, welcoming ideas from the team.', 'His condition is ______ to treatment, and the doctors are optimistic about his recovery.', 'The company is ______ to changes in policy if they align with employee needs.'], ['amenable', 'amenable', 'amenable']),
+			           new Word("invoke", ['During the debate, he tried to ______ the Constitution to support his argument.', 'In times of crisis, leaders often ______ a sense of national unity to bring people together.', 'He attempted to ______ nostalgia by mentioning shared memories during his speech.'], ['invoke', 'invoke', 'invoke']),
+			           new Word("forbear", ['Despite the provocation, he chose to ______ from responding in anger.', 'The judge decided to ______ issuing a sentence immediately, allowing for more evidence to be presented.', 'She had to ______ from making any comments during the meeting, though she strongly disagreed.'], ['forbear', 'forbear', 'forbear']),
+			           new Word("entreat", ['She ______ her parents to let her attend the summer camp with her friends.', 'He ______ his boss for an extension on the deadline, explaining his difficult situation.', 'They ______ the audience to donate to the charity, emphasizing the importance of their cause.'], ['entreated', 'entreated', 'entreated']),
+			           new Word("sovereign", ['As a ______ nation, the country has the right to govern itself without interference from others.', 'The ______ power of the government allows it to make decisions independently of outside influence.', 'Many countries gained their ______ status after years of colonization and struggle for independence.'], ['sovereign', 'sovereign', 'sovereign']),
+			           new Word("authorize", ['The government ______ the construction of a new highway to improve transportation in the region.', 'The manager has been ______ to approve all budget changes for the project.', 'Only licensed personnel are ______ to handle sensitive documents within the company.'], ['authorized', 'authorized', 'authorized']),
+			           new Word("disapprobation", ['The plan to cut funding for education led to public ______ and protests.', 'Despite the ______ of his peers, he continued to pursue his controversial ideas.', 'Her unconventional behavior often drew ______ from the more conservative members of society.'], ['disapprobation', 'disapprobation', 'disapprobation']),
+			           new Word("beneficence", ['His ______ was evident in the numerous scholarships he funded for underprivileged students.', 'Her acts of ______ made a lasting impact on the community, earning her widespread respect.', 'In many cultures, acts of ______ are seen as a moral duty to help those less fortunate.'], ['beneficence', 'beneficence', 'beneficence']),
+			           new Word("interpose", ['He quickly ______ a remark to clarify the misunderstanding between his colleagues.', 'The teacher ______ herself between the two students to prevent a fight.', 'During the heated argument, she tried to ______ herself as a mediator to calm things down.'], ['interposed', 'interposed', 'interpose']),
+			           new Word("expediency", ['For the sake of ______, the company chose to implement the quickest solution, even though it wasn’t the most sustainable.', 'Political leaders often have to balance between moral principles and the ______ of practical decisions.', "The plan's ______ was questioned, as it seemed focused more on immediate results than on future stability."], ['expediency', 'expediency', 'expediency']),
+			           new Word("discretion", ['You can trust her to handle the confidential information with the utmost ______.', 'He used his ______ to choose the best course of action during the crisis.', 'Parents should use their ______ when deciding what content is appropriate for their children to watch.'], ['discretion', 'discretion', 'discretion']),
+			           new Word("preclude", ['Heavy rainfall ______ any possibility of holding the event outdoors.', 'Her busy schedule ______ her from attending the conference this year.', "The treaty's strict terms ______ either nation from deploying additional troops in the region."], ['precluded', 'precludes', 'preclude']),
+			           new Word("rigidly", ['The school ______ enforces its dress code, allowing no exceptions for students.', 'The rules were ______ applied, with no flexibility allowed for individual circumstances.', 'She ______ stuck to her daily routine, refusing to make any changes despite the challenges.'], ['rigidly', 'rigidly', 'rigidly']),
+			           new Word("accountable", ['As a leader, she is ______ for the success or failure of the project.', 'Employees are held ______ for meeting their targets and delivering results.', 'He was found ______ for the mistakes made during the financial audit.'], ['accountable', 'accountable', 'accountable']),
+			           new Word("consciousness", ['After the accident, he briefly lost ______ but regained it a few minutes later.', 'Her ______ of the challenges ahead made her more determined to succeed.', 'The artist’s work aimed to elevate the ______ of the audience about global poverty.'], ['consciousness', 'consciousness', 'consciousness']),
+			           new Word("conscience", ['His ______ wouldn’t allow him to lie, so he told the truth even though it was difficult.', 'Despite the pressure from his peers, his ______ guided him to make the right decision.', 'She couldn’t enjoy the money because her ______ kept reminding her that it was earned dishonestly.'], ['conscience', 'conscience', 'conscience']),
+			           new Word("speculative", ['His theory about life on other planets is purely ______, with no concrete evidence to support it.', 'The media’s ______ reports about the celebrity’s personal life have caused unnecessary rumors.', 'Buying property in that area is a ______ move, as the market is very unpredictable.'], ['speculative', 'speculative', 'speculative']),
+			           new Word("comprehensive", ['She provided a ______ explanation of the topic, covering all key aspects in detail.', 'The ______ guidebook includes everything you need to know about traveling through Europe.', 'The report offered a ______ analysis of the market trends, leaving no area unexplored.'], ['comprehensive', 'comprehensive', 'comprehensive'])
+			       ];
+
+			       // Shuffle array function
+			       function shuffle(array) {
+			           for (let i = array.length - 1; i > 0; i--) {
+			               const j = Math.floor(Math.random() * (i + 1));
+			               [array[i], array[j]] = [array[j], array[i]];
+			           }
+			           return array;
+			       }
+
+			       let selectedWords = [];
+			       let selectedSentences = [];
+
+			       // Function to start the quiz
+			       function startQuiz() {
+			           // Clear previous content
+			           document.getElementById('wordBank').innerHTML = '';
+			           document.getElementById('questions').innerHTML = '';
+			           document.getElementById('result').innerText = '';
+
+			           // Randomly select 8 words
+			           selectedWords = shuffle([...words]).slice(0, 8);
+
+			           // Extract one random sentence and answer for each selected word
+			           selectedSentences = selectedWords.map(wordObj => {
+			               const randomIndex = Math.floor(Math.random() * wordObj.examplesentence.length);
+			               return { sentence: wordObj.examplesentence[randomIndex], answer: wordObj.answer[randomIndex] };
+			           });
+
+			           // Shuffle the selected sentences
+			           shuffle(selectedSentences);
+
+			           // Display the word bank
+			           let wordBankHTML = selectedWords.map(wordObj => `<li onclick="toggleStrike(this)">${wordObj.word}</li>`).join('');
+			           document.getElementById('wordBank').innerHTML = wordBankHTML;
+
+			           // Display the sentences with input fields
+			           let questionsHTML = selectedSentences.map((item, index) => {
+			               return `<p>${index + 1}. ${item.sentence.replace('______', `<input type="text" id="q${index + 1}">`)}</p>`;
+			           }).join('');
+			           document.getElementById('questions').innerHTML = questionsHTML;
+			       }
+
+			       // Toggle strike-through on word bank items
+			       function toggleStrike(element) {
+			           element.classList.toggle('strike');
+			       }
+
+			// Toggle show hint
+			function showHint(index) {
+			   	    const hintLetter = selectedSentences[index].answer.charAt(0);
+			   	    const inputField = document.getElementById('q' + (index + 1));
+			   	    inputField.value = hintLetter;
+			}
+
+
+			       // Check the user's answers
+			       function checkAnswers() {
+			           let score = 0;
+			           let totalQuestions = selectedSentences.length;
+
+			           for (let i = 0; i < totalQuestions; i++) {
+			               let userAnswer = document.getElementById('q' + (i + 1)).value.trim().toLowerCase();
+			               if (userAnswer === selectedSentences[i].answer.toLowerCase()) {
+			                   score++;
+			                   document.getElementById('q' + (i + 1)).classList.add('correct');
+			                   document.getElementById('q' + (i + 1)).classList.remove('incorrect');
+			               } else {
+			                   document.getElementById('q' + (i + 1)).classList.add('incorrect');
+			                   document.getElementById('q' + (i + 1)).classList.remove('correct');
+			               }
+			           }
+
+			           let resultText = `You got ${score} out of ${totalQuestions} correct.`;
+			           document.getElementById('result').innerText = resultText;
+
+			           // Special effect for a perfect score
+			           if (score === totalQuestions) {
+			               document.getElementById('result').innerHTML = "Congratulations! 🎉 You got all the answers correct!";
+			               triggerConfetti();
+			           }
+			       }
+
+			       // Show the correct answers
+			       function showAnswers() {
+			           let totalQuestions = selectedSentences.length;
+
+			           for (let i = 0; i < totalQuestions; i++) {
+			               document.getElementById('q' + (i + 1)).value = selectedSentences[i].answer;
+			               document.getElementById('q' + (i + 1)).classList.remove('incorrect', 'correct');
+			           }
+			       }
+
+			       // Confetti effect for a perfect score
+			       function triggerConfetti() {
+			    const confettiContainer = document.createElement('div');
+			    confettiContainer.id = 'confetti-container';
+			    document.body.appendChild(confettiContainer);
+
+			    for (let i = 0; i < 300; i++) {
+			        const confetti = document.createElement('div');
+			        confetti.className = 'confetti';
+
+			        // Randomized direction for the confetti particles
+			        confetti.style.setProperty('--x', `${Math.random() * 200 - 100}vw`);
+			        confetti.style.setProperty('--y', `${Math.random() * 200 - 100}vh`);
+
+			        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+			        confetti.style.position = 'absolute';
+			        confetti.style.width = '10px';
+			        confetti.style.height = '10px';
+			       	confetti.style.borderRadius = '50%';
+			       	confetti.style.top = '50%';
+			       	confetti.style.left = '50%';
+			       	confetti.style.animation = 'confettiBurst 1s ease-out forwards';
+			       	confettiContainer.appendChild(confetti);
+			   	    }
+
+			   	    // Remove confetti after 1 second (duration of the animation)
+			   	    setTimeout(() => {
+			       	confettiContainer.remove();
+			   	    }, 1000);
+			}
+
+
+			       // Initialize the quiz on page load
+			       window.onload = startQuiz;
+		</script>
+	</body>
+</html>
